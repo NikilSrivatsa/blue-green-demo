@@ -20,14 +20,42 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.url === '/') {
-    sendJson(res, 200, {
-      service: 'blue-green-demo',
-      version,
-      color,
-      message: `Hello from the ${color} environment`
-    });
-    return;
-  }
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+
+  res.end(`
+    <html>
+    <head>
+      <title>Blue-Green Deployment</title>
+      <style>
+        body {
+          font-family: Arial;
+          text-align: center;
+          margin-top: 100px;
+          background-color: ${color === "green" ? "#d4edda" : "#cce5ff"};
+        }
+        .card {
+          padding: 30px;
+          border-radius: 10px;
+          display: inline-block;
+          background: white;
+          box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        h1 { color: ${color === "green" ? "green" : "blue"}; }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>🚀 Blue-Green Deployment</h1>
+        <h2>Environment: ${color.toUpperCase()}</h2>
+        <p>Version: ${version}</p>
+        <p>Status: ✅ Running Successfully</p>
+      </div>
+    </body>
+    </html>
+  `);
+
+  return;
+}
 
   sendJson(res, 404, {
     error: 'not_found'
