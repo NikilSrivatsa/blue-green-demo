@@ -58,18 +58,21 @@ pipeline {
         }
 
         stage('Smoke Test Target Color') {
-            steps {
-                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
-                    sh '''
-                        kubectl -n "$NAMESPACE" run smoke-test-"$BUILD_NUMBER" \
-                            --rm \
-                            --restart=Never \
-                            --image=curlimages/curl:8.10.1 \
-                            --command -- curl -fsS "http://${APP_NAME}-${TARGET_COLOR}/health"
-                    '''
-                }
-            }
+    steps {
+        withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+            sh '''
+                kubectl -n "$NAMESPACE" run smoke-test-"$BUILD_NUMBER" \
+                    --restart=Never \
+                    --image=curlimages/curl:8.10.1 \
+                    --command -- curl -fsS "http://${APP_NAME}-${TARGET_COLOR}/health"
+
+                kubectl -n "$NAMESPACE" wait --for=condition=Ready pod/smoke-test-"$BUILD_NUMBER" --timeout=30s || true
+                kubectl -n "$NAMESPACE" logs smoke-test-"$BUILD_NUMBER"
+                kubectl -n "$NAMESPACE" delete pod smoke-test-"$BUILD_NUMBER"
+            '''
         }
+    }
+}
 
         stage('Switch Traffic') {
             steps {
